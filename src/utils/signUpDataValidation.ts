@@ -1,5 +1,8 @@
 import validator from 'validator';
-import { Request } from 'express';
+import { Request,Response } from 'express';
+import { UserModel } from '../schema/userSchema';
+import bcrypt from "bcrypt"
+import { error } from 'console';
 
 export const signUpDataValidation = (req:Request) => {
   const { firstName, lastName, email, password } = req.body;
@@ -13,3 +16,4 @@ export const signUpDataValidation = (req:Request) => {
     throw new Error("Password is not valid");
   }
 };
+
