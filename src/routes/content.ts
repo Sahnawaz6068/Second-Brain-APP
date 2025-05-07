@@ -3,6 +3,9 @@ import userMiddleware from "../middleware/userMiddleware";
 import BrainModel from "../schema/brainSchema";
 import {v4 as uuidv4} from "uuid"
 import LinkModel from "../schema/linkSchema";
+
+import { ShareHashGenerator } from "../utils/hashShare";
+import { UserModel } from "../schema/userSchema";
 const contentRoute = Router();
 
 //store/post data in brain
@@ -79,47 +82,119 @@ contentRoute.delete(
 );
 
 //shere content
-contentRoute.post("/brain/share/:contentId",userMiddleware, async (req: Request, res: Response) => {
-  const contentId=req.params.conentId;
-  //@ts-ignore
-  const loggedaInUserId=req.UserId;
-  //Share all the brain not specific make it specific share brain 
-  //Usiing the haAH ID WE can access the Content 
-  try{
-    const hash=uuidv4();
-    const newLink=new LinkModel({
-      hash,
-      userId:loggedaInUserId
-    })
-    await newLink.save();
-    res.send("Link is created")
-  }catch(err){
-    res.status(404).send(err);
-  }
-  res.send("le tu bhi dekh le");
-});
+// contentRoute.post("/brain/share/:contentId",userMiddleware, async (req: Request, res: Response) => {
+//   const contentId=req.params.contentId;
+//   //@ts-ignore
+//   const loggedInUserId = req.UserId;
+//   //Share all the brain not specific make it specific share brain 
+//   //Usiing the haAH ID WE can access the Content 
+//   try{
+//     const hash=uuidv4();
+//     console.log(hash)
+//     const newLink=await LinkModel.create({
+//       hash,
+//       contentId,
+//       userId:loggedInUserId,
+//     })
+//     console.log(newLink)
+//     // const response=await newLink.save();
+
+//     res.status(200).json({
+//       msg:newLink,
+//       shareableLink:"http://localhost:3000/api/v1"+ `/brain/access/${hash}`
+//     })
+//   }catch(err){
+//     res.status(404).send(err);
+//   }
+// });
 
 //share brain
-contentRoute.post("/brain/share",userMiddleware,(req:Request,res:Response)=>{
+contentRoute.post("/brain/share",userMiddleware,async (req:Request,res:Response)=>{
+  const {share}=req.body;
   //@ts-ignore
-  const loggedaInUserId=req.UserId;
+  const loggedInUserId=req.UserId;
+  console.log(loggedInUserId);
+  console.log(ShareHashGenerator(10));
   try{
-    console.log("share your brain");
+    if(share){
+      await LinkModel.create({
+        hash:ShareHashGenerator(10),
+        userId:loggedInUserId,
+        //our hash generator 
+      })
+    }else{
+      await LinkModel.deleteOne({
+        userId:loggedInUserId
+      })
+    }
     res.status(200).json({
-      msg:"brain shaired"
+      msg:"Brain sharable Link generated"
+    })
+  }catch(error){ 
+    res.status(400).json({
+      msg:"Brain can not be share "+error
+    })
+  }  
+})
+//get brain end point 
+contentRoute.get("/brain/:shareLink",userMiddleware,async (req:Request,res:Response)=>{
+  const shareLink=req.params.shareLink;
+  console.log(shareLink)
+  try{
+    const brainLink=await LinkModel.findOne({
+      hash:shareLink
+    })
+    console.log(brainLink);
+    if(!brainLink){
+      throw new Error("Something wrong with hash");
+      return;
+    }
+    /*how it work->in sharable link search throuh hash then from there find userId then find all the content 
+    from content model or Brain Store Model then search in userModel*/
+    const content =await BrainModel.find({
+      userId:brainLink.userId
+    })
+    const userInfo=await UserModel.find({
+       _id:brainLink.userId
+    })
+    console.log(content);
+    if(!userInfo){
+      res.send("Error should not happen  something wrong in logic");
+      return;
+    }
+  //  const fn=userInfo.firstName
+  console.log("_________________________________________________________________________________")
+    console.log(userInfo[0].firstName);
+    console.log(userInfo);
+    res.status(200).json({
+      msg:content
     })
   }catch(err:any){
-    res.status(404).json({
-      msg:"brain can not share"
+    res.status(400).json({
+      msg:"Something wrong in accessing the brain"+err.message
     })
   }
 })
-
-contentRoute.get(
-  "/brain/share/:conentId",
-  async (req: Request, res: Response) => {
-    res.send("le tu bhi dekh le");
-  }
-);
+//get brain content through the content Id.
+// contentRoute.get(
+//   "/brain/access/:contentId",
+//   async (req: Request, res: Response) => {
+//     const hash=req.params.contentId;
+//     try{
+//       const content=await LinkModel.findOne({
+//         hash
+//       })
+//       const contentId=content?.contentId;
+//       const contents=await BrainModel.findOne({
+//         contentId
+//       })
+//       console.log(contents)
+//       res.status(200).json({
+//         content
+//       })
+//     }catch(err){
+//     }
+//   }
+// );
 
 export default contentRoute;
