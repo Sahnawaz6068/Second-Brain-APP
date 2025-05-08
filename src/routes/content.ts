@@ -6,6 +6,7 @@ import LinkModel from "../schema/linkSchema";
 
 import { ShareHashGenerator } from "../utils/hashShare";
 import { UserModel } from "../schema/userSchema";
+import { hash } from "crypto";
 const contentRoute = Router();
 
 //store/post data in brain
@@ -116,20 +117,38 @@ contentRoute.post("/brain/share",userMiddleware,async (req:Request,res:Response)
   console.log(loggedInUserId);
   console.log(ShareHashGenerator(10));
   try{
+    //If it exist mean This loggedIn user already made sharable link
+    
     if(share){
-      await LinkModel.create({
+      const existingLink=await LinkModel.find({
+        userId:loggedInUserId
+      })
+      console.log(existingLink[0]);
+      if(existingLink[0]){
+          res.status(200).json({
+            //@ts-ignore
+          msg:existingLink[0].hash
+        })
+      }
+      const link=await LinkModel.create({
         hash:ShareHashGenerator(10),
         userId:loggedInUserId,
         //our hash generator 
+      })
+      console.log("Link is generated")
+      // const hashLink=link.hash;
+      res.status(200).json({
+        msg:"Hash link is generated:::->"+link.hash,
+        
       })
     }else{
       await LinkModel.deleteOne({
         userId:loggedInUserId
       })
+      res.status(200).json({
+        msg:"Sharable link is removed"
+      })
     }
-    res.status(200).json({
-      msg:"Brain sharable Link generated"
-    })
   }catch(error){ 
     res.status(400).json({
       msg:"Brain can not be share "+error
@@ -175,26 +194,5 @@ contentRoute.get("/brain/:shareLink",userMiddleware,async (req:Request,res:Respo
     })
   }
 })
-//get brain content through the content Id.
-// contentRoute.get(
-//   "/brain/access/:contentId",
-//   async (req: Request, res: Response) => {
-//     const hash=req.params.contentId;
-//     try{
-//       const content=await LinkModel.findOne({
-//         hash
-//       })
-//       const contentId=content?.contentId;
-//       const contents=await BrainModel.findOne({
-//         contentId
-//       })
-//       console.log(contents)
-//       res.status(200).json({
-//         content
-//       })
-//     }catch(err){
-//     }
-//   }
-// );
 
 export default contentRoute;
