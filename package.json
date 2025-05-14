@@ -18,10 +18,12 @@
   },
   "dependencies": {
     "@types/bcrypt": "^5.0.2",
+    "@types/cors": "^2.8.18",
     "@types/express": "^5.0.1",
     "@types/jsonwebtoken": "^9.0.9",
     "bcrypt": "^5.1.1",
     "cookies": "^0.9.1",
+    "cors": "^2.8.5",
     "express": "^5.1.0",
     "js-cookie": "^3.0.5",
     "jsonwebtoken": "^9.0.2",

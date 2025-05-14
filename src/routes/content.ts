@@ -1,35 +1,34 @@
 import { Router, Request, Response } from "express";
 import userMiddleware from "../middleware/userMiddleware";
 import BrainModel from "../schema/brainSchema";
-import {v4 as uuidv4} from "uuid"
 import LinkModel from "../schema/linkSchema";
-
 import { ShareHashGenerator } from "../utils/hashShare";
 import { UserModel } from "../schema/userSchema";
-import { hash } from "crypto";
-const contentRoute = Router();
 
+const contentRoute = Router();
 //store/post data in brain
 contentRoute.post(
   "/content",
-  userMiddleware,
+ 
   async (req: Request, res: Response) => {
     const link = req.body.link;
-    const type = req.body.type;
+    const type = req.body.type; 
+    const title=req.body.title;
     console.log(link);
     //@ts-ignore
-    const loggedaInUserId = req.UserId;
-    console.log(loggedaInUserId);
+    // const loggedaInUserId = req.UserId;
+    // console.log(loggedaInUserId);
 
     try {
       const createContent = await BrainModel.create({
+        title,
         link,
         type,
-        userId: loggedaInUserId,
+        // userId: loggedaInUserId,
         tags: [],
       });
       res.status(200).json({
-        msg: "content is created by userId::" + loggedaInUserId,
+        msg: "content is created by userId::" ,
       });
     } catch (err) {
       res.status(403).json({
@@ -38,7 +37,7 @@ contentRoute.post(
     }
   }
 );
-//get the all content using you loggedin user id
+//get the all content using you loggedin user id,access only if you are logg
 contentRoute.get(
   "/content",
   userMiddleware,
@@ -110,12 +109,13 @@ contentRoute.delete(
 // });
 
 //share brain
+
 contentRoute.post("/brain/share",userMiddleware,async (req:Request,res:Response)=>{
   const {share}=req.body;
   //@ts-ignore
   const loggedInUserId=req.UserId;
   console.log(loggedInUserId);
-  console.log(ShareHashGenerator(10));
+  // console.log(ShareHashGenerator(10));
   try{
     //If it exist mean This loggedIn user already made sharable link
     
@@ -124,12 +124,13 @@ contentRoute.post("/brain/share",userMiddleware,async (req:Request,res:Response)
         userId:loggedInUserId
       })
       console.log(existingLink[0]);
+      //if you got existing link then do this
       if(existingLink[0]){
           res.status(200).json({
-            //@ts-ignore
           msg:existingLink[0].hash
         })
       }
+      //if you do not got existing link then create
       const link=await LinkModel.create({
         hash:ShareHashGenerator(10),
         userId:loggedInUserId,
@@ -141,6 +142,7 @@ contentRoute.post("/brain/share",userMiddleware,async (req:Request,res:Response)
         msg:"Hash link is generated:::->"+link.hash,
         
       })
+      //if share true nahi hai to link ko delete kar so
     }else{
       await LinkModel.deleteOne({
         userId:loggedInUserId
@@ -156,7 +158,8 @@ contentRoute.post("/brain/share",userMiddleware,async (req:Request,res:Response)
   }  
 })
 //get brain end point 
-contentRoute.get("/brain/:shareLink",userMiddleware,async (req:Request,res:Response)=>{
+//it is open end point anyone can get w/o authentication and authorization
+contentRoute.get("/brain/:shareLink",async (req:Request,res:Response)=>{
   const shareLink=req.params.shareLink;
   console.log(shareLink)
   try{
@@ -190,9 +193,11 @@ contentRoute.get("/brain/:shareLink",userMiddleware,async (req:Request,res:Respo
     })
   }catch(err:any){
     res.status(400).json({
-      msg:"Something wrong in accessing the brain"+err.message
+      msg:"Sorry incorrect input"+err.message
     })
   }
 })
 
 export default contentRoute;
+
+//38:00 start Front end

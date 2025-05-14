@@ -5,7 +5,8 @@ const Cookies =require("cookies")
  const userMiddleware=(req:Request,res:Response,next:NextFunction)=>{
     //@ts-ignore
     const cookies = new Cookies(req, res);
-    const token = cookies.get("token1");
+    const token = cookies.get("token");
+    console.log(token);
     if(!token){
         res.send("token is not present or user is not logined")
     }

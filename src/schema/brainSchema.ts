@@ -12,6 +12,9 @@ const BrainSchema=new mongoose.Schema({
             required:true,
             unique:true
         },
+        title:{
+            type:String
+        },
         tags:[{type:mongoose.Types.ObjectId,ref:'Tag'}],
         userId:[{type:mongoose.Types.ObjectId,ref:'User3',require:true}],
 })
