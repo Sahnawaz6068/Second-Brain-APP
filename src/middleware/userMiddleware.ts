@@ -21,5 +21,5 @@ const Cookies =require("cookies")
         res.status(400).send("user have wrong credentials")
     }
 }
-
+ 
 export default userMiddleware;

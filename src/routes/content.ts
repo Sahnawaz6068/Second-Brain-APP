@@ -9,22 +9,22 @@ const contentRoute = Router();
 //store/post data in brain
 contentRoute.post(
   "/content",
- 
+ userMiddleware,
   async (req: Request, res: Response) => {
     const link = req.body.link;
     const type = req.body.type; 
     const title=req.body.title;
     console.log(link);
     //@ts-ignore
-    // const loggedaInUserId = req.UserId;
-    // console.log(loggedaInUserId);
+    const loggedaInUserId = req.UserId;
+    console.log(loggedaInUserId);
 
     try {
-      const createContent = await BrainModel.create({
+      await BrainModel.create({
         title,
         link,
         type,
-        // userId: loggedaInUserId,
+        userId: loggedaInUserId,
         tags: [],
       });
       res.status(200).json({
@@ -44,6 +44,8 @@ contentRoute.get(
   async (req: Request, res: Response) => {
     //@ts-ignore
     const loggedaInUserId = req.UserId;
+    console.log("papa hu mai ")
+    console.log(loggedaInUserId);
     try {
       const content = await BrainModel.find({
         userId: loggedaInUserId,
